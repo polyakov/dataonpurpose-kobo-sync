@@ -1,8 +1,8 @@
 #!/bin/bash
 
-#sleep for a 10 minutes to let things start up
-echo "going to sleep for 10 minutes at $(date)"
-sleep 600
+#sleep for a 2 minutes to let things start up
+echo "going to sleep for 2 minutes at $(date)"
+sleep 120
 
 while :
 do
