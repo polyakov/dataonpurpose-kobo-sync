@@ -39,7 +39,7 @@ async function main() {
   //load this from somewhere another start is known
   const dbRecordCount = await getRecordCount(connectionString);
   console.log(`DB Record count: ${dbRecordCount}`)
-  let syncStart = dbRecordCoun;
+  let syncStart = dbRecordCount;
   let syncLimit = 30000;
 
   let data: any = null;
