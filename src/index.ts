@@ -37,7 +37,9 @@ async function main() {
   console.log("Last sync date: ", lastSyncDate);
 
   //load this from somewhere another start is known
-  let syncStart = 0;
+  const dbRecordCount = await getRecordCount(connectionString);
+  console.log(`DB Record count: ${dbRecordCount}`)
+  let syncStart = dbRecordCoun;
   let syncLimit = 30000;
 
   let data: any = null;
@@ -69,6 +71,7 @@ async function getData(
 ) {
   try {
     const url = `${server}/api/v2/assets/${asset}/data.json?start=${syncStart}&limit=${syncLimit}`;
+    console.log(url);
 
     const auth = `Token ${token}`;
     const axiosOptions: AxiosRequestConfig<any> = {
@@ -109,6 +112,22 @@ async function getLastSyncDate(connectionString: string) {
   }
 }
 
+async function getRecordCount( connectionString:string) {
+    const client = new Client({
+        connectionString: connectionString,
+      });
+  
+      await client.connect();
+  
+      const res = await client.query(
+        "select count(1) as record_count from kobo_form_sync;"
+      );
+      const record_count = await res.rows[0].record_count;
+      await client.end();
+
+      return record_count as number;
+}
+
 async function update(
   connectionString: string,
   data: any,
@@ -130,7 +149,7 @@ async function update(
     //   const submissionDate = new Date(row._submission_time);
     //   if (submissionDate < last_sync_date) continue;
       const queryResult = await client.query(insertSql, [id, row]);
-      insertCount += queryResult.rowCount;
+      insertCount += queryResult.rowCount ?? 0;
       //console.log(queryResult);
     }
 
