@@ -99,17 +99,17 @@ SELECT * FROM kobo_form_sync
 ### Powershell
 Set envoronment variables using powershell
 ```
-$Env:DATABASE_NAME=kobosync
-$Env:SYNC_USERNAME=kobosync
-$Env:SYNC_USER_PASSWORD=Password2
+$Env:DATABASE_NAME="kobosync"
+$Env:SYNC_USERNAME="kobosync"
+$Env:SYNC_USER_PASSWORD="Password2"
 
 $Env:KOBO_SERVER="https://kf.kobotoolbox.org"
 $Env:KOBO_FORM_ID=<form_id>
 $Env:KOBO_TOKEN=<api-token>
 
-PSQL_SERVER=172.17.0.2
+$Env:PSQL_SERVER="172.17.0.2"
 
-PSQL_CONNECTION_STR="postgresql://$Env:SYNC_USERNAME:$Env:SYNC_USER_PASSWORD@$Env:PSQL_SERVER/$Env:DATABASE_NAME?sslmode=disable"
+PSQL_CONNECTION_STR="postgresql://${Env:SYNC_USERNAME}:${Env:SYNC_USER_PASSWORD}@${Env:PSQL_SERVER}/${Env:DATABASE_NAME}?sslmode=disable"
 ```
 
 Run the container in powershell:
