@@ -106,8 +106,8 @@ async function getData(
     console.log(`Start get: ${Date.now()}`);
     const url 
         = `${server}/api/v2/assets/${asset}/data.json?start=${syncStart}&limit=${syncLimit}`
-          + query ? `&query=${query}`: ""
-          + sort  ? `&sort=${sort}` : ""
+          + (query ? `&query=${query}`: "")
+          + (sort  ? `&sort=${sort}` : "");
     
     console.log(url);
 
