@@ -13,7 +13,7 @@ program
   .option("-s, --server [value]", "kobo server")
   .option("-t, --token [value]", "kobo token")
   .option("-a, --asset [value]", "kobo asset/survey")
-  .option("-s, --sync-mode", "id|date")
+  .option("-m, --sync-mode", "id|date")
   .parse(process.argv);
 
 /*
@@ -28,7 +28,7 @@ const connectionString = options.connectionString;
 const server = options.server;
 const token = options.token;
 const asset = options.asset;
-const syncMode = options.syncMode;
+const syncMode = options.syncMode ?? "id";
 
 main().then((x) => {
   console.log("exiting");
