@@ -13,6 +13,7 @@ program
   .option("-s, --server [value]", "kobo server")
   .option("-t, --token [value]", "kobo token")
   .option("-a, --asset [value]", "kobo asset/survey")
+  .option("-s, --sync-mode", "id|date")
   .parse(process.argv);
 
 /*
@@ -27,6 +28,7 @@ const connectionString = options.connectionString;
 const server = options.server;
 const token = options.token;
 const asset = options.asset;
+const syncMode = options.syncMode;
 
 main().then((x) => {
   console.log("exiting");
@@ -34,13 +36,36 @@ main().then((x) => {
 
 async function main() {
   const lastSyncDate = await getLastSyncDate(connectionString);
-  console.log("Last sync date: ", lastSyncDate);
+  const maxId = await getMaxSyncId(connectionString);
+  console.log(`Last sync date:  ${lastSyncDate}`);
+  console.log(`Max id: ${maxId}`)
 
   //load this from somewhere another start is known
-  const dbRecordCount = await getRecordCount(connectionString);
-  console.log(`DB Record count: ${dbRecordCount}`)
-  let syncStart = dbRecordCount;
-  let syncLimit = 30000;
+  
+  let syncStart: number; 
+  let syncLimit:number; 
+  let query: string|undefined;
+  let sort: string|undefined;
+  
+  switch(syncMode) {
+    case "date":
+      const dbRecordCount = await getRecordCount(connectionString);
+      console.log(`DB Record count: ${dbRecordCount}`)
+      syncStart = dbRecordCount;
+      syncLimit = 30000;
+      query     =undefined;
+      sort      = undefined;
+      break;
+    case "id":
+      const maxId = await getMaxSyncId(connectionString);
+      syncStart = 0;
+      syncLimit = 30000;
+      query     = `query={"_id":{"$gt":${maxId}}}`
+      sort      = '{"_id":1}'
+      break;
+    default:
+      throw Error(`Unknown sync mode ${syncMode}`);
+  } 
 
   let data: any = null;
   do {
@@ -50,14 +75,20 @@ async function main() {
       lastSyncDate,
       syncStart,
       syncLimit,
+      query,
+      sort,
       token
     );
+
     console.log("Total records to scan: ", data.results.length);
+    if( data.results.length > 0) {
+      const updateResult = await update(connectionString, data, lastSyncDate);
+      console.log("Records inserted: ", updateResult);
+    }
 
-    const insertCount = await update(connectionString, data, lastSyncDate);
-    console.log("Records inserted: ", insertCount);
+    //if using skip, then increment start, if using id the search takes care of it
+    syncStart = syncMode=== "date" ? syncStart+syncLimit : 0;
 
-    syncStart += syncLimit;
   } while (!(data.results.length < syncLimit)); //stop if return is less than
 }
 
@@ -67,10 +98,17 @@ async function getData(
   date: Date,
   syncStart: number,
   syncLimit: number,
+  query:string|undefined,
+  sort:string|undefined,
   token: string
 ) {
   try {
-    const url = `${server}/api/v2/assets/${asset}/data.json?start=${syncStart}&limit=${syncLimit}`;
+    console.log(`Start get: ${Date.now()}`);
+    const url 
+        = `${server}/api/v2/assets/${asset}/data.json?start=${syncStart}&limit=${syncLimit}`
+          + query ? `&query=${query}`: ""
+          + sort  ? `&sort=${sort}` : ""
+    
     console.log(url);
 
     const auth = `Token ${token}`;
@@ -90,6 +128,28 @@ async function getData(
     throw e;
   }
 }
+
+async function getMaxSyncId(connectionString: string) {
+  try {
+    const client = new Client({
+      connectionString: connectionString,
+    });
+
+    await client.connect();
+
+    const res = await client.query(
+      "select max(id) as max_id from kobo_form_sync;"
+    );
+    const maxId = await res.rows[0].max_id;
+    await client.end();
+
+    return maxId as number;
+  } catch (e) {
+    console.log(`Failed to get last sync date.  Error: ${JSON.stringify(e)}`);
+    throw e;
+  }
+}
+
 
 async function getLastSyncDate(connectionString: string) {
   try {
@@ -136,16 +196,20 @@ async function update(
   try {
     let insertCount = 0;
 
-    const insertSql = "insert into kobo_form_sync (id, form) values ($1, $2) ON CONFLICT (id) DO NOTHING; ";
+    const insertSql = 
+         "insert into kobo_form_sync (id, form) \
+          values ($1, $2) ON CONFLICT (id) DO NOTHING; ";
     const client = new Client({
       connectionString: connectionString,
     });
 
     await client.connect();
+    let maxId = 0
 
     for (let i = 0; i < data.results.length; i++) {
       const row = data.results[i];
-      const id = row._id;
+      const id = row._id as number;
+      maxId = Math.max(id, maxId);
     //   const submissionDate = new Date(row._submission_time);
     //   if (submissionDate < last_sync_date) continue;
       const queryResult = await client.query(insertSql, [id, row]);
@@ -155,7 +219,10 @@ async function update(
 
     await client.end();
 
-    return insertCount;
+    return {
+      insertCount: insertCount,
+      maxId: maxId
+    };
   } catch (e) {
     console.log(`DB update filed. Error: ${JSON.stringify(e)}`);
     throw e;
