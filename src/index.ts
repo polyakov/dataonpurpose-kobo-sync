@@ -85,6 +85,8 @@ async function main() {
       const updateResult = await update(connectionString, data, lastSyncDate);
       console.log("Records inserted: ", updateResult);
       maxId = updateResult.maxId;
+      query     = `{"_id":{"$gt":${maxId}}}`
+      sort      = '{"_id":1}'
     }
 
     //if using skip, then increment start, if using id the search takes care of it
