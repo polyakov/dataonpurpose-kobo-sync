@@ -60,7 +60,7 @@ async function main() {
       const maxId = await getMaxSyncId(connectionString);
       syncStart = 0;
       syncLimit = 30000;
-      query     = `query={"_id":{"$gt":${maxId}}}`
+      query     = `{"_id":{"$gt":${maxId}}}`
       sort      = '{"_id":1}'
       break;
     default:
