@@ -88,6 +88,7 @@ async function main() {
 
     //if using skip, then increment start, if using id the search takes care of it
     syncStart = syncMode=== "date" ? syncStart+syncLimit : 0;
+    maxId = updateResult.maxId;
 
   } while (!(data.results.length < syncLimit)); //stop if return is less than
 }
