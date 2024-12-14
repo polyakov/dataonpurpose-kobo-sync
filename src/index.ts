@@ -143,7 +143,7 @@ async function getMaxSyncId(connectionString: string) {
     const maxId = await res.rows[0].max_id;
     await client.end();
 
-    return maxId as number;
+    return maxId ?? 0 as number;
   } catch (e) {
     console.log(`Failed to get last sync date.  Error: ${JSON.stringify(e)}`);
     throw e;
