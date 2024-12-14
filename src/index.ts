@@ -36,7 +36,7 @@ main().then((x) => {
 
 async function main() {
   const lastSyncDate = await getLastSyncDate(connectionString);
-  const maxId = await getMaxSyncId(connectionString);
+  let maxId = await getMaxSyncId(connectionString);
   console.log(`Last sync date:  ${lastSyncDate}`);
   console.log(`Max id: ${maxId}`)
 
@@ -84,13 +84,13 @@ async function main() {
     if( data.results.length > 0) {
       const updateResult = await update(connectionString, data, lastSyncDate);
       console.log("Records inserted: ", updateResult);
+      maxId = updateResult.maxId;
     }
 
     //if using skip, then increment start, if using id the search takes care of it
     syncStart = syncMode=== "date" ? syncStart+syncLimit : 0;
-    maxId = updateResult.maxId;
-
-  } while (!(data.results.length < syncLimit)); //stop if return is less than
+    
+  } while (data.results.length); //stop if return is less than
 }
 
 async function getData(
