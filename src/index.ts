@@ -53,7 +53,7 @@ async function main() {
       console.log(`DB Record count: ${dbRecordCount}`)
       syncStart = dbRecordCount;
       syncLimit = 30000;
-      query     =undefined;
+      query     = undefined;
       sort      = undefined;
       break;
     case "id":
