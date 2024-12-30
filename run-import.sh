@@ -1,13 +1,13 @@
 #!/bin/bash
 
-#sleep for a 2 minutes to let things start up
-echo "going to sleep for 2 minutes at $(date)"
-sleep 120
+# sleep for a 5 minutes to let things start up
+# echo "going to sleep for 5 minutes at $(date)"
+# sleep 300
 
 while :
 do
 	echo "=================================== run sync ======================================"
-    node dist/index.js -s ${KOBO_SERVER}  -t ${KOBO_TOKEN}  -a ${KOBO_ASSET} -c ${PSQL_CONNECTION_STR} ]
+    node dist/index.js -s ${KOBO_SERVER}  -t ${KOBO_TOKEN}  -a ${KOBO_ASSET} -c ${PSQL_CONNECTION_STR}
 	echo "=================================== end sunc ======================================"
     echo "LOOP_LENGTH_MINUTES: $LOOP_LENGTH_MINUTES"
 	WAIT_TIME=$[ $LOOP_LENGTH_MINUTES - $RANDOM % 30 + 15 ]
